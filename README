@@ -74,7 +74,3 @@ vector of primes it provides the methods:
 + static int32_t lambda(uint32_t i);
 + static int32_t legendreSymbol(const uint32_t a, const uint32_t b);
 + static int32_t jacobiSymbol(const uint32_t a, const uint32_t b);
-
-                       REPORTING BUGS
-					  
-If you find a bug in ampclib, please contact jan-christian.rohde@gmx.de.
