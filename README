@@ -1,0 +1,80 @@
+Copyright (C) 2018 Jan Christian Rohde
+
+This file is part of ampclib.
+
+ampclib is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 3 of the License, or (at your option) any later
+version.
+
+ampclib is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+ampclib. If not, see http://www.gnu.org/licenses/.
+
+
+
+                       Requirements
+
+ampclib itself requires only C++11 and that 64 and 32 bit (un)signed integers
+are supported.
+
+Moreover it comes with a test written with QtTest. Thus Qt is required to
+execute the test, but not for the library itself.
+
+
+
+                       INSTALL / START
+					
+The library comes as source only. Thus it needs to be compiled / included into
+your project by your self.
+
+
+
+                       GENERAL INFORMATION
+
+ampclib is a simple to use platform independent C++ library for arithmetic
+multiple precision computations with a self explaining interface many number
+theoretic functions and primality tests. It consists of three classes:
+
++Integer (multiple precision integers)
++Rational (multiple precision rational numbers using the Integer class)
++Primes (prime number computations and number theoretic functions for unsigned
+         32 bit integers)
+		 
+The Integer class uses as a vector of ("unbounded") unsigned 32 bit integers
+the build in arithmetics from the compiler itself. Moreover it implements the
+fast SRT division algorithm and the Miller-Rabin-Primality-Test. In addition
+the Integer class has the static methods:
++ Integer fibonacci(const uint32_t i);
++ Integer lucas(const uint32_t i);
++ Integer faculty(const uint32_t i);
++ Integer binomial(uint32_t a, const uint32_t b);
++ Integer multiSet(const uint32_t a, const uint32_t b);
++ Integer gcd(Integer a, Integer b);
++ Integer extendedEuclidianAlgo(Integer a, Integer b, Integer &r, Integer &s);
++ Integer lcm(const Integer &a, const Integer &b);
+
+The Primes class is a singleton, which computes all integers till sqrt(2^32),
+when its instance is generated. This should not take too much time. Using this
+vector of primes it provides the methods:
++ bool isPrime(const uint32_t i) const;
++ uint32_t getPrimeFactor(const uint32_t i) const;
++ static void getPrimeFactors(uint32_t i, std::vector<uint32_t> &primeFactors);
++ static void getPrimeFactorsWithMultiplicity(uint32_t i, std::vector<uint32_t> &primeFactors);
++ static void getFactors(uint32_t i, std::vector<uint32_t> &factors);
++ static uint32_t factorNumber(uint32_t i);
++ static uint64_t factorSum(const uint32_t i);
++ static uint32_t eulerPhi(uint32_t i);
++ static uint64_t psi(uint32_t i);
++ uint16_t pi(const uint16_t i) const;
++ uint32_t nextPrime(const uint16_t) const;
++ static int32_t lambda(uint32_t i);
++ static int32_t legendreSymbol(const uint32_t a, const uint32_t b);
++ static int32_t jacobiSymbol(const uint32_t a, const uint32_t b);
+
+                       REPORTING BUGS
+					  
+If you find a bug in ampclib, please contact jan-christian.rohde@gmx.de.
