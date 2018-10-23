@@ -143,6 +143,8 @@ private:
                            size_t lhsIndex) const;
     void addFromIndex(std::vector<uint32_t> &value, uint32_t i, const size_t index) const;
 
+    void multiplyAbsoluteValues(const std::vector<uint32_t> &factor1, const std::vector<uint32_t> &factor2, std::vector<uint32_t> &product) const;
+
     void multiplyVectorByUnsignedInt(const std::vector<uint32_t> &vec, const uint32_t i, std::vector<uint32_t> &result, uint32_t &overflow) const;
 
     void performDivision(const uint32_t i, std::vector<uint32_t> &result, uint32_t &overflow) const;

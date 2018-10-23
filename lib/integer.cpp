@@ -180,43 +180,9 @@ Integer Integer::operator *(const Integer &rhs) const {
 
     result.positive = positive == rhs.positive;
 
-    size_t size1 = absoluteValue.size(), size2 = rhs.absoluteValue.size();
+    multiplyAbsoluteValues(absoluteValue, rhs.absoluteValue, result.absoluteValue);
 
-    uint64_t product = 0;
-    uint64_t overflow = 0;
-    uint64_t sum = 0;
-    size_t u = 0, resultSize = size1 + size2 - 1;
-    bool resized = false;
-
-    result.absoluteValue.resize(resultSize, 0);
-
-    for (size_t s = 0; s < size1; ++s) {
-        for (size_t t = 0; t < size2; ++t) {
-            product = (uint64_t)absoluteValue[s] * rhs.absoluteValue[t];
-            sum = product + result.absoluteValue[s+t];
-            result.absoluteValue[s+t] = sum % Basis;
-            overflow = sum / Basis;
-            u = s+t;
-            while (overflow > 0) {
-                u++;
-                if (u >= resultSize) {
-                    if (resized) result.absoluteValue[u] += (uint32_t)overflow;
-                    else {
-                        result.absoluteValue.push_back((uint32_t)overflow);
-                        resized = true;
-                    }
-                    overflow = 0;
-                }
-                else {
-                    sum = overflow + result.absoluteValue[u];
-                    result.absoluteValue[u] = sum % Basis;
-                    overflow = sum / Basis;
-                }
-            }
-        }
-    }
-
-    return(result);
+    return result;
 }
 
 Integer Integer::operator /(const Integer &divisor) const {
@@ -548,13 +514,13 @@ Integer Integer::lucas(const uint32_t i) {
 }
 
 Integer Integer::faculty(const uint32_t i) {
-    Integer f(i);
+    Integer f(i), g(1);
 
     for (uint32_t j = 2; j < i; ++j) {
         f *= j;
     }
 
-    return f;
+    return f * g;
 }
 
 Integer Integer::binomial(uint32_t a, uint32_t b) {
@@ -674,7 +640,7 @@ void Integer::addAbsValues(const std::vector<uint32_t> &larger, const std::vecto
     bool overflow = false;
     size_t maxSize = larger.size();
 
-    result.resize(maxSize, 0);
+    result.resize(maxSize);
 
     size_t size = smaller.size();
     for (size_t s = 0; s < size; ++s) {
@@ -702,7 +668,7 @@ void Integer::subtractAbsValues(const std::vector<uint32_t> &larger, const std::
         overflow = overflow ? larger[s] <= smaller[s] : larger[s] < smaller[s];
     }
 
-    for (size_t s = size ; s < maxSize ; ++s) {
+    for (size_t s = size ; s < maxSize; ++s) {
         result[s] = larger[s] - overflow;
         overflow = overflow ? larger[s] == 0 : false;
     }
@@ -747,7 +713,7 @@ void Integer::subtractInt(std::vector<uint32_t> &result, const uint32_t i) const
         overflow = 1 - sum / Basis;
     }
 
-    while (result.back() == 0 && result.size() > 0) result.pop_back();
+    while (result.back() == 0 && result.size() > 1) result.pop_back();
 }
 
 void Integer::divide(const std::vector<uint32_t> &numerator,
@@ -756,6 +722,9 @@ void Integer::divide(const std::vector<uint32_t> &numerator,
 {
     const size_t divisorSize = divisor.size();
     const size_t numeratorSize = numerator.size();
+
+    std::vector<uint32_t> product;
+    product.resize(divisorSize);
 
     const size_t quotientSize = getQuotientSize(numerator, divisor);
 
@@ -784,8 +753,6 @@ void Integer::divide(const std::vector<uint32_t> &numerator,
             else addFromIndex(toMuch, quot, currentQuotientIndex);
 
             uint32_t productOverflow = 0;
-            std::vector<uint32_t> product;
-            product.resize(divisorSize);
             multiplyVectorByUnsignedInt(divisor, quot, product, productOverflow);
 
             larger = isLargerFromIndex(localCopy, product, overflow, productOverflow, currentQuotientIndex);
@@ -828,17 +795,22 @@ void Integer::divide(const std::vector<uint32_t> &numerator,
         overflow = localCopy[numeratorSize - s - 1] * Basis;
     }
 
-    std::vector<uint32_t> q;
-    subtractAbsValues(quotient, toMuch, q);
-    quotient = q;
+    subtractAbsValues(quotient, toMuch, product);
+    quotient = product;
 
-    Integer i, j;
-    i.absoluteValue = quotient;
-    j.positive = positive;
-    j.absoluteValue = divisor;
-    if ((i * j > *this && positive) || (!positive && i * j < *this)) {
-        i -= Integer(1);
-        quotient = i.absoluteValue;
+    product.clear();
+    multiplyAbsoluteValues(quotient, divisor, product);
+    if (isAbsoluteValueLarger(product, absoluteValue)) {
+        overflow = 1;
+
+        size_t qSize = quotient.size(), sum;
+        for (size_t s = 0 ; s < qSize && overflow; ++s) {
+            sum = Basis + quotient[s] - overflow;
+            quotient[s] = sum % Basis;
+            overflow = 1 - sum / Basis;
+        }
+
+        while (quotient.back() == 0 && quotient.size() > 1) quotient.pop_back();
     }
 }
 
@@ -877,6 +849,43 @@ void Integer::addFromIndex(std::vector<uint32_t> &value, uint32_t i, const size_
     }
 
     if (i > 0) value.push_back(i);
+}
+
+void Integer::multiplyAbsoluteValues(const std::vector<uint32_t> &factor1, const std::vector<uint32_t> &factor2, std::vector<uint32_t> &product) const
+{
+    size_t size1 = factor1.size(), size2 = factor2.size();
+
+    uint64_t overflow = 0;
+    uint64_t sum = 0;
+    size_t u = 0, resultSize = size1 + size2 - 1;
+    bool resized = false;
+
+    product.resize(resultSize, 0);
+
+    for (size_t s = 0; s < size1; ++s) {
+        for (size_t t = 0; t < size2; ++t) {
+            sum = (uint64_t)factor1[s] * factor2[t] + product[s+t];
+            product[s+t] = sum % Basis;
+            overflow = sum / Basis;
+            u = s+t;
+            while (overflow > 0) {
+                u++;
+                if (u >= resultSize) {
+                    if (resized) product[u] += (uint32_t)overflow;
+                    else {
+                        product.push_back((uint32_t)overflow);
+                        resized = true;
+                    }
+                    overflow = 0;
+                }
+                else {
+                    sum = overflow + product[u];
+                    product[u] = sum % Basis;
+                    overflow = sum / Basis;
+                }
+            }
+        }
+    }
 }
 
 void Integer::multiplyVectorByUnsignedInt(const std::vector<uint32_t> &vec, const uint32_t i, std::vector<uint32_t> &result, uint32_t &overflow) const {
