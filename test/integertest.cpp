@@ -94,6 +94,7 @@ void IntegerTest::multiplicationTest() {
     QVERIFY(Integer("0") == Integer("2") * Integer("-0"));
     QVERIFY(Integer("-0") == Integer("0") * Integer("5"));
 
+    QVERIFY((Integer(Basis) * Integer(Basis) + 1) * (Integer(Basis) * Integer(Basis) - 1) == Integer(Basis) * Integer(Basis) * Integer(Basis) * Integer(Basis) - 1);
     QVERIFY(Integer("9999999999999999999999999999999999999999999999000000000000000000000000000000000000000000000000000000000")
             == Integer("9999999999999999999999999999999999999999999999")
             * Integer("1000000000000000000000000000000000000000000000000000000000"));
